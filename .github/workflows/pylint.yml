@@ -11,4 +11,4 @@ jobs:
         with:
           python-version: "3.14"
       - name: Run Pylint
-        run: uv run python -m pylint src
+        run: PYTHONPATH=src uv run python -m pylint src

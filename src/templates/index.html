@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="fi">
+  <head>
+    <meta charset="utf-8">
+    <title>Ohtuvarasto</title>
+  </head>
+  <body>
+    <h1>Ohtuvarasto</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul aria-live="polite">
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <h2>Varastot</h2>
+    {% if warehouses %}
+      <table>
+        <thead>
+          <tr>
+            <th>Nimi</th>
+            <th>Tilavuus</th>
+            <th>Saldo</th>
+            <th>Vapaata tilaa</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for warehouse in warehouses %}
+            <tr>
+              <td>{{ warehouse.name }}</td>
+              <td>{{ warehouse.storage.tilavuus }}</td>
+              <td>{{ warehouse.storage.saldo }}</td>
+              <td>{{ warehouse.storage.paljonko_mahtuu() }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>Varastoja ei ole vielä luotu.</p>
+    {% endif %}
+
+    <h2>Luo varasto</h2>
+    <form action="{{ url_for('web.create_warehouse') }}" method="post">
+      <label for="name">Nimi</label>
+      <input id="name" name="name" required>
+      <label for="capacity">Tilavuus</label>
+      <input id="capacity" name="capacity" type="number" min="0" step="any" required>
+      <button type="submit">Luo varasto</button>
+    </form>
+
+    <h2>Lisää tavaraa</h2>
+    <form action="{{ url_for('web.add_to_warehouse') }}" method="post">
+      <label for="add-warehouse">Varasto</label>
+      <select id="add-warehouse" name="warehouse" required>
+        {% for warehouse in warehouses %}
+          <option value="{{ loop.index0 }}">{{ warehouse.name }}</option>
+        {% endfor %}
+      </select>
+      <label for="add-amount">Määrä</label>
+      <input id="add-amount" name="amount" type="number" min="0" step="any" required>
+      <button type="submit">Lisää</button>
+    </form>
+
+    <h2>Ota tavaraa</h2>
+    <form action="{{ url_for('web.remove_from_warehouse') }}" method="post">
+      <label for="remove-warehouse">Varasto</label>
+      <select id="remove-warehouse" name="warehouse" required>
+        {% for warehouse in warehouses %}
+          <option value="{{ loop.index0 }}">{{ warehouse.name }}</option>
+        {% endfor %}
+      </select>
+      <label for="remove-amount">Määrä</label>
+      <input id="remove-amount" name="amount" type="number" min="0" step="any" required>
+      <button type="submit">Ota</button>
+    </form>
+  </body>
+</html>
