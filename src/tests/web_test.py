@@ -29,8 +29,8 @@ def test_warehouses_can_be_created_and_listed(client):
 
     assert b"Mehu" in response.data
     assert b"Olut" in response.data
-    assert b">10.0<" in response.data
-    assert b">20.0<" in response.data
+    assert response.data.count(b">10.0<") == 2
+    assert response.data.count(b">20.0<") == 2
     assert response.data.count(b">0.0<") == 2
 
 
@@ -52,21 +52,21 @@ def test_add_and_remove_update_the_selected_warehouse(client):
     create_warehouse(client, "First", 10)
     create_warehouse(client, "Second", 5)
 
-    client.post(
+    added_response = client.post(
         "/add",
         data={"warehouse": "1", "amount": "3"},
         follow_redirects=True,
     )
+    assert b">3.0<" in added_response.data and b">2.0<" in added_response.data
+
     response = client.post(
         "/remove",
         data={"warehouse": "1", "amount": "2"},
         follow_redirects=True,
     )
 
-    assert b"First" in response.data
-    assert b"Second" in response.data
-    assert b">1.0<" in response.data
-    assert b">10.0<" in response.data
+    assert b"First" in response.data and b"Second" in response.data
+    assert b">1.0<" in response.data and b">4.0<" in response.data
 
 
 def test_adding_more_than_capacity_does_not_exceed_it(client):
@@ -81,6 +81,46 @@ def test_adding_more_than_capacity_does_not_exceed_it(client):
 
     assert b">5.0<" in response.data
     assert b"Varasto tuli t" in response.data
+
+
+def test_removing_more_than_balance_does_not_make_balance_negative(client):
+    """Ylisuuri poisto tyhjentää varaston mutta ei laske saldoa alle nollan."""
+    create_warehouse(client, "Testi", 5)
+    client.post(
+        "/add",
+        data={"warehouse": "0", "amount": "3"},
+        follow_redirects=True,
+    )
+
+    response = client.post(
+        "/remove",
+        data={"warehouse": "0", "amount": "8"},
+        follow_redirects=True,
+    )
+
+    assert b">0.0<" in response.data
+    assert b">5.0<" in response.data
+    assert b"Varasto tyhjeni." in response.data
+
+
+def test_invalid_removal_amount_does_not_change_balance(client):
+    """Virheellinen poistomäärä ilmoitetaan eikä muuta saldoa."""
+    create_warehouse(client, "Testi", 5)
+    client.post(
+        "/add",
+        data={"warehouse": "0", "amount": "3"},
+        follow_redirects=True,
+    )
+
+    response = client.post(
+        "/remove",
+        data={"warehouse": "0", "amount": "-1"},
+        follow_redirects=True,
+    )
+
+    assert b"error" in response.data
+    assert b">3.0<" in response.data
+    assert b">2.0<" in response.data
 
 
 @pytest.mark.parametrize("amount", ["", "abc", "0", "-2", "nan", "inf"])

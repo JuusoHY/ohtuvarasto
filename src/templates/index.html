@@ -25,6 +25,7 @@
             <th>Nimi</th>
             <th>Tilavuus</th>
             <th>Saldo</th>
+            <th>Vapaata tilaa</th>
           </tr>
         </thead>
         <tbody>
@@ -33,6 +34,7 @@
               <td>{{ warehouse.name }}</td>
               <td>{{ warehouse.storage.tilavuus }}</td>
               <td>{{ warehouse.storage.saldo }}</td>
+              <td>{{ warehouse.storage.paljonko_mahtuu() }}</td>
             </tr>
           {% endfor %}
         </tbody>
